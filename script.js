@@ -3,10 +3,11 @@ const form = document.querySelector("form")
 const amount = document.getElementById("amount")
 const expense = document.getElementById("expense")
 const category = document.getElementById("category")
-const expensesQuatity = document.querySelector("aside header p span")
 
 // Seleciona os elementos da lista
 const expenseList = document.querySelector("ul")
+const expensesTotal = document.querySelector("aside header h2")
+const expensesQuatity = document.querySelector("aside header p span")
 
 // Capturando o evento de input para formatar o valor.
 amount.oninput = ()=>{
@@ -83,7 +84,7 @@ function expenseAdd(newExpense){
     .toUpperCase()
     .replace("R$", "")}`
 
-    //criando o ícone de remover
+    // Criando o ícone de remover
     const removerIcon = document.createElement("img")
     removerIcon.setAttribute("src", `img/remove.svg`)
     removerIcon.setAttribute("alt", "remover")
@@ -95,7 +96,10 @@ function expenseAdd(newExpense){
     // Adiciona o item na lista.
     expenseList.append(expenseItem)
     
-    // Atualiza os totais
+    // Limpa o formulário para adicionar um novo item.
+    formClear()
+    
+    // Atualiza os totais.
     updateTotals()
         
     }catch(error){
@@ -104,7 +108,7 @@ function expenseAdd(newExpense){
     }
 }
 
-// atualizar os totais (valor total e quantidade de itens na lista)
+// Atualizar os totais (valor total e quantidade de itens na lista).
 function updateTotals(){
     try {
         // Recuperar todos os itens (li) na lista (ul)
@@ -112,9 +116,74 @@ function updateTotals(){
 
         // Atualiza a quantidade de itens na lista
         expensesQuatity.textContent = `${items.length} ${items.length > 1 ? "despesas" : "despesa"}`
+
+        // Variável para incrementar o total.
+        let total = 0
+
+        // Percorre cada item (li) da lista (ul)
+        for(let item = 0; item < items.length; item++){
+            const itemAmount = items[item].querySelector(".expense-amount")
+
+            // Remove caracteres não númericos e subistitui a vírgula pelo ponto.
+            let value = itemAmount.textContent.replace(/[^\d,]/g, "").replace(",", ".")
+
+            // Converte o valor para float.
+            value = parseFloat(value)
+
+            // Verifica se é um número válido
+            if(isNaN(value)){
+                return alert(" Não foi possível calcular o total, o valor não parece ser um número.")
+            }
+            
+            // Incrementar o valor total
+            total += Number(value)
+        }
+
+        // Criar a span para adicionar o R$ formatado.
+        const symbolBRL = document.createElement("small")
+        symbolBRL.textContent = "R$"  
         
+        // Formata o valor e remove o R$ que será exibido pela small com um estilo customizado.
+        total = formatCurrencyBRL(total).toUpperCase().replace("R$", "")
+
+        // Limpa o conteúdo do elemento
+        expensesTotal.innerHTML = ""
+        
+        // Adiciona o símbolo da moeda e o valor total.
+        expensesTotal.append(symbolBRL, total)
+
+        // Evento que captura o clique nos itens da lista
+        expenseList.addEventListener("click", (event)=>{
+            // Verificar se o elemento clicado é o ícone de remover.
+            if(event.target.classList.contains("remove-icon")){
+
+                // Obtendo o item da lista que é pai do elemento clicado.
+                const item = event.target.closest(".expense") // O método Closest é utilizado para encontrar o ancestral mais próximo de um elemento no DOM que corresponde a um seletor css especificado. Ele verifica o próprio elemento e, em seguida, percorre sua cadeia de ancestrais até encontrar uma correspondência ou até atingir o elemento raiz do documento.
+
+                // Removendo o item da lista.
+                item.remove()
+
+
+                
+                
+            }
+
+            // Chamando a função updateTotals para que quando o item seja removido o valor total seja também alterado.
+            updateTotals()
+        })
+
     } catch (error) {
         console.log(error)
         alert("Não foi possível atualizar os totais")
     }
+}
+
+function formClear(){
+    // Limpa os inputs.
+    expense.value = ""
+    category.value = ""
+    amount.value = ""
+
+    // Coloca o foco no input de amount.
+    expense.focus()
 }
